@@ -116,7 +116,7 @@ class CreditCalculator {
           cliente: data.clientName,
           importe: parseFloat(data.amount),
           modalidad: data.frequency,
-          tazaInteres: parseFloat(data.interestRate),
+          tasaInteres: parseFloat(data.interestRate),
           numeroCuotas: parseInt(data.installments),
           fechaInicio: data.startDate
         })
