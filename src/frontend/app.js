@@ -89,14 +89,14 @@ class CreditCalculator {
   showResults(results) {
     this.resultsDiv.innerHTML = `
       <h2>Resultado del Cálculo</h2>
-      <p>Importe de cuota: $${results.installment.toFixed(2)}</p>
-      <p>Importe total a pagar: $${results.totalAmount.toFixed(2)}</p>
-      <p>Ganancia percibida: $${results.profit.toFixed(2)} (${results.profitPercentage.toFixed(2)}%)</p>
+      <p>Importe de cuota: $${results.importeCuota.toFixed(2)}</p>
+      <p>Importe total a pagar: $${results.importeTotal.toFixed(2)}</p>
+      <p>Ganancia percibida: $${results.ganancia.toFixed(2)}</p>
     `;
     this.resultsDiv.style.display = 'block';
   }
 
-  calculate() {
+  async calculate() {
     const formData = new FormData(this.form);
     const data = {};
     formData.forEach((value, key) => data[key] = value);
@@ -106,27 +106,31 @@ class CreditCalculator {
       return;
     }
 
-    const amount = parseFloat(data.amount);
-    const interestRate = parseFloat(data.interestRate) / 100;
-    const installments = parseInt(data.installments);
+    try {
+      const response = await fetch('http://localhost:3000/credits/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cliente: data.clientName,
+          importe: parseFloat(data.amount),
+          modalidad: data.frequency,
+          tazaInteres: parseFloat(data.interestRate),
+          numeroCuotas: parseInt(data.installments),
+          fechaInicio: data.startDate
+        })
+      });
 
-    // Calcular el importe total con intereses
-    const totalAmount = amount * (1 + interestRate);
-    
-    // Calcular la cuota
-    const installment = totalAmount / installments;
-    
-    // Calcular la ganancia
-    const profit = totalAmount - amount;
-    const profitPercentage = (profit / amount) * 100;
+      if (!response.ok) {
+        throw new Error('Error al calcular el crédito');
+      }
 
-    this.showResults({
-      installment,
-      totalAmount,
-      profit,
-      profitPercentage,
-      frequency: data.frequency
-    });
+      const results = await response.json();
+      this.showResults(results);
+    } catch (error) {
+      alert('Error al calcular el crédito: ' + error.message);
+    }
   }
 
   setupEventListeners() {
