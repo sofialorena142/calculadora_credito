@@ -1,0 +1,14 @@
+es una calculadora de creditos.
+cuenta con los siguientes campos:
+cliente: (nombre del cliente)
+importe del credito
+modalidad: Mensual, Quincenal, Semanal
+taza de interes: es un porcentaje
+numero de cuotas
+fecha de comienzo del credito
+
+la calculadora de creditos debe:
+
+- sumar el importe mas la tasa de interes y dividirlo por la cantidad de cuotas para sacar el importe de la cuota
+- debe mostrar el importe total a pagar
+- debe mostrar la ganancia percibida 
