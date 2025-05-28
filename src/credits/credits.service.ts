@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { CreditsRepository } from './credits.repository';
 
 export interface CreditCalculation {
+  id?: number;
   cliente: string;
   importe: number;
   modalidad: 'Mensual' | 'Quincenal' | 'Semanal';
@@ -14,7 +16,11 @@ export interface CreditCalculation {
 
 @Injectable()
 export class CreditsService {
-  calculateCredit(params: CreditCalculation): CreditCalculation {
+  private readonly logger = new Logger(CreditsService.name);
+  constructor(private readonly repository: CreditsRepository) {}
+
+  calculateCredit(params: Omit<CreditCalculation, 'id' | 'importeCuota' | 'importeTotal' | 'ganancia'>): CreditCalculation {
+    this.logger.log(`Calculating credit with params: ${JSON.stringify(params)}`);
     const { importe, tasaInteres, numeroCuotas } = params;
 
     // Convertir la tasa de interés anual a mensual
@@ -25,11 +31,35 @@ export class CreditsService {
     const importeTotal = importeCuota * numeroCuotas;
     const ganancia = importeTotal - importe;
 
-    return {
+    const result = {
       ...params,
       importeCuota: Number(importeCuota.toFixed(2)),
       importeTotal: Number(importeTotal.toFixed(2)),
       ganancia: Number(ganancia.toFixed(2)),
     };
+
+    this.logger.log(`Resultado del cálculo de crédito: ${JSON.stringify(result)}`);
+    return this.repository.add(result);
+  }
+
+  getAllCalculations(): CreditCalculation[] {
+    this.logger.log('Obteniendo todos los cálculos de crédito');
+    const results = this.repository.getAll();
+    this.logger.log(`Encontrados ${results.length} cálculos de crédito`);
+    return results;
+  }
+
+  getCalculation(id: number): CreditCalculation | undefined {
+    this.logger.log(`Obteniendo cálculo de crédito con ID: ${id}`);
+    const result = this.repository.findById(id);
+    this.logger.log(`Cálculo encontrado: ${result ? 'sí' : 'no'}`);
+    return result;
+  }
+
+  deleteCalculation(id: number): boolean {
+    this.logger.log(`Eliminando cálculo de crédito con ID: ${id}`);
+    const success = this.repository.delete(id);
+    this.logger.log(`Operación de eliminación ${success ? 'exitosa' : 'fallida'}`);
+    return success;
   }
 }

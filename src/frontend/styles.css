@@ -137,6 +137,37 @@ body {
   overflow-x: auto;
 }
 
+.results-table th {
+  background: var(--accent-start);
+  color: white;
+  padding: 1rem;
+  text-align: left;
+}
+
+.results-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.results-table tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
 .results-table table {
   width: 100%;
   border-collapse: collapse;
