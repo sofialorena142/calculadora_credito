@@ -109,39 +109,99 @@ class CreditCalculator {
   }
 
   setupResultsTable() {
-    this.resultsTable = document.createElement('div');
-    this.resultsTable.className = 'results-table';
-    
     const table = document.createElement('table');
+    table.className = 'results-table';
+    
     const thead = document.createElement('thead');
-    const tbody = document.createElement('tbody');
+    const tr = document.createElement('tr');
     
-    const headerRow = document.createElement('tr');
-    headerRow.innerHTML = `
-      <th>Cliente</th>
-      <th>Importe</th>
-      <th>Modalidad</th>
-      <th>Tasa (%)</th>
-      <th>Cuotas</th>
-      <th>Fecha</th>
-      <th>Importe Cuota</th>
-      <th>Total a Pagar</th>
-      <th>Ganancia</th>
-    `;
-    thead.appendChild(headerRow);
+    const headers = ['ID', 'Cliente', 'Importe', 'Modalidad', 'Tasa (%)', 'Cuotas', 'Fecha Inicio', 'Cuota', 'Total', 'Ganancia', 'Acciones'];
+    headers.forEach(header => {
+      const th = document.createElement('th');
+      th.textContent = header;
+      tr.appendChild(th);
+    });
     
+    thead.appendChild(tr);
     table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
     table.appendChild(tbody);
-    this.resultsTable.appendChild(table);
-    
-    this.container.appendChild(this.resultsTable);
+
+    this.container.appendChild(table);
+    this.resultsTable = tbody;
+
+    // Cargar resultados iniciales
+    this.loadResults();
+  }
+
+  async loadResults() {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/credits', {
+        credentials: 'include'
+      });
+      const results = await response.json();
+      this.updateResultsTable(results);
+    } catch (error) {
+      console.error('Error al cargar los resultados:', error);
+    }
+  }
+
+  updateResultsTable(results) {
+    this.resultsTable.innerHTML = '';
+    results.forEach(result => {
+      const tr = document.createElement('tr');
+      
+      const data = [
+        result.id,
+        result.cliente,
+        `$${result.importe.toFixed(2)}`,
+        result.modalidad,
+        `${result.tasaInteres}%`,
+        result.numeroCuotas,
+        new Date(result.fechaInicio).toLocaleDateString(),
+        `$${result.importeCuota.toFixed(2)}`,
+        `$${result.importeTotal.toFixed(2)}`,
+        `$${result.ganancia.toFixed(2)}`,
+        `<button class="delete-btn" data-id="${result.id}">Eliminar</button>`
+      ];
+
+      data.forEach(cell => {
+        const td = document.createElement('td');
+        td.innerHTML = cell;
+        tr.appendChild(td);
+      });
+
+      this.resultsTable.appendChild(tr);
+    });
+
+    // Agregar event listeners a los botones de eliminar
+    this.resultsTable.querySelectorAll('.delete-btn').forEach(button => {
+      button.addEventListener('click', async (e) => {
+        const id = e.target.dataset.id;
+        if (confirm('¿Estás seguro de que quieres eliminar este cálculo?')) {
+          try {
+            const response = await fetch(`http://127.0.0.1:3000/credits/${id}`, {
+              method: 'DELETE',
+              credentials: 'include'
+            });
+            if (response.ok) {
+              this.loadResults();
+            }
+          } catch (error) {
+            console.error('Error al eliminar el cálculo:', error);
+          }
+        }
+      });
+    });
   }
 
   addResultToTable(results, formData) {
-    const tbody = this.resultsTable.querySelector('tbody');
+    const tbody = this.resultsTable;
     const row = document.createElement('tr');
     
     row.innerHTML = `
+      <td>${results.id}</td>
       <td>${formData.clientName}</td>
       <td>$${formData.amount}</td>
       <td>${formData.frequency}</td>
@@ -171,11 +231,12 @@ class CreditCalculator {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/credits/calculate', {
+      const response = await fetch('http://127.0.0.1:3000/credits/calculate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           cliente: data.clientName,
           importe: parseFloat(data.amount),
